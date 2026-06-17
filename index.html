@@ -3,76 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>Comparador Profissional</title>
-    <!-- SheetJS para ler colunas automaticamente -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #4f46e5; --bg-body: #030712; --bg-card: #111827; --text-main: #f9fafb; --border: rgba(255,255,255,0.1); }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; }
+        /* Variáveis de Tema */
+        :root { 
+            --accent: #4f46e5; 
+            --bg-body: #f3f4f6; 
+            --bg-card: #ffffff; 
+            --text-main: #111827; 
+        }
+        body.dark-mode { 
+            --bg-body: #030712; 
+            --bg-card: #111827; 
+            --text-main: #f9fafb; 
+        }
+
+        body { font-family: sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.3s; display: flex; flex-direction: column; align-items: center; padding: 40px; }
+        .card { background: var(--bg-card); padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         
-        .card { background: var(--bg-card); padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; border: 1px solid var(--border); box-shadow: 0 20px 25px rgba(0,0,0,0.3); }
-        h1 { font-size: 24px; text-align: center; margin-bottom: 5px; }
-        #counter { font-size: 11px; text-align: center; color: var(--accent); margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
-        
-        /* Dropdown customizado estilo input */
-        select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 14px; border: 1px solid var(--border); background: #030712; color: white; outline: none; }
-        
-        .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 18px; margin: 12px 0; border-radius: 16px; cursor: pointer; text-align: center; }
-        
-        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; width: 100%; transition: 0.2s; }
-        .main { background: var(--accent); color: white; }
-        .secondary { background: #1f2937; color: white; }
-        
-        .timeline { list-style: none; padding: 0; margin-top: 15px; }
-        .timeline li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-        
-        footer { margin-top: 30px; font-size: 11px; opacity: 0.6; }
+        select, .upload-wrapper { width: 100%; padding: 14px; margin: 10px 0; border-radius: 14px; border: 1px solid #ccc; background: transparent; color: var(--text-main); box-sizing: border-box; }
+        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; width: 100%; transition: 0.2s; background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-            <button style="width:auto" onclick="document.body.classList.toggle('light-mode')">🌓 Alternar</button>
-            <button style="width:auto" onclick="alert('Instruções: Carregue o arquivo A para listar as colunas.')">ℹ️ Ajuda</button>
+        <div style="display: flex; justify-content: space-between;">
+            <button style="width:auto" onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar Modo</button>
+            <button style="width:auto">ℹ️ Ajuda</button>
         </div>
         
-        <h1>📊 Comparador 📊</h1>
-        <div id="counter">AUDITORIAS REALIZADAS: <span id="count">3</span></div>
+        <h1>📊 Comparador</h1>
         
-        <!-- Menu Suspenso de Colunas -->
-        <select id="colunas-select">
-            <option>Selecione a coluna de referência...</option>
-        </select>
+        <select id="colunas-select"><option>Carregue arquivo para listar colunas...</option></select>
 
-        <label class="upload-wrapper" for="file1"><input type="file" id="file1" style="display:none" onchange="lerCabecalhos(this, 'label1')"><span id="label1">📁 Arquivo A</span></label>
-        <label class="upload-wrapper" for="file2"><input type="file" id="file2" style="display:none" onchange="updateUI(this, 'label2')"><span id="label2">📁 Arquivo B</span></label>
+        <label class="upload-wrapper" for="file1"><input type="file" id="file1" onchange="lerCabecalhos(this)" style="display:none">📁 Arquivo A</label>
         
-        <button class="main" onclick="processar()">Processar Auditoria</button>
-        <button class="secondary" onclick="window.location.reload()">Limpar Tudo</button>
-
-        <div id="msg" style="padding:10px; background:#dcfce7; color:#166534; border-radius:10px; margin-top:10px; display:none;">Concluído com sucesso!</div>
-
-        <div style="margin-top: 25px;">
-            <strong>Timeline de Auditorias:</strong>
-            <ul class="timeline" id="lista-historico"></ul>
+        <button onclick="processar()">Processar Auditoria</button>
+        
+        <!-- Seletor de Tema -->
+        <div style="margin-top:20px; font-size:12px;">
+            Cor do Tema: <input type="color" value="#4f46e5" onchange="document.documentElement.style.setProperty('--accent', this.value)">
         </div>
     </div>
 
-    <footer>Comparador Profissional v2.0 | Suporte: 7gaalves7@email.com</footer>
-    <div style="margin-top:10px;">Cor do Tema: <input type="color" onchange="document.documentElement.style.setProperty('--accent', this.value)"></div>
-
     <script>
-        // Carrega histórico salvo anteriormente
-        window.onload = () => {
-            const hist = JSON.parse(localStorage.getItem('auditorias') || "[]");
-            document.getElementById('lista-historico').innerHTML = hist.map(i => `<li>${i}</li>`).join('');
-        };
-
-        function updateUI(input, labelId) { document.getElementById(labelId).innerText = "✅ " + input.files[0].name; }
-
-        function lerCabecalhos(input, labelId) {
-            updateUI(input, labelId);
+        function lerCabecalhos(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target.result);
@@ -82,7 +58,7 @@
                 const select = document.getElementById('colunas-select');
                 select.innerHTML = ''; 
                 for(let C = range.s.c; C <= range.e.c; ++C) {
-                    const header = sheet[XLSX.utils.encode_col(C) + "1"].v;
+                    const header = sheet[XLSX.utils.encode_col(C) + "1"]?.v || "Coluna " + (C+1);
                     select.add(new Option(header, header));
                 }
             };
@@ -90,21 +66,8 @@
         }
 
         async function processar() {
-            const f1 = document.getElementById('file1').files[0];
-            const f2 = document.getElementById('file2').files[0];
-            const col = document.getElementById('colunas-select').value;
-            if(!f1 || !f2) return alert("Selecione os arquivos");
-            
-            const formData = new FormData();
-            formData.append("arquivo1", f1); formData.append("arquivo2", f2);
-            formData.append("colunas", col);
-
-            const res = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
-            if(res.ok) {
-                const blob = await res.blob();
-                const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Resultado.xlsx"; a.click();
-                document.getElementById('msg').style.display = 'block';
-            }
+            // Lógica do seu processamento aqui...
+            alert("Processando com a cor definida!");
         }
     </script>
 </body>
