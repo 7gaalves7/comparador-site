@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador Profissional</title>
+    <title>Comparador Profissional v2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-body: #f3f4f6; --bg-card: rgba(255, 255, 255, 0.7); --text-main: #111827; --accent: #4f46e5; --border: rgba(0,0,0,0.1); }
-        body.dark-mode { --bg-body: #030712; --bg-card: rgba(17, 24, 39, 0.7); --text-main: #f9fafb; --border: rgba(255,255,255,0.1); }
+        :root { --bg-body: #f3f4f6; --bg-card: rgba(255, 255, 255, 0.8); --text-main: #111827; --accent: #4f46e5; --border: rgba(0,0,0,0.1); }
+        body.dark-mode { --bg-body: #030712; --bg-card: rgba(17, 24, 39, 0.8); --text-main: #f9fafb; --border: rgba(255,255,255,0.1); }
         
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.5s; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 100vh; margin: 0; }
         
         .card { 
-            background: var(--bg-card); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 450px; border: 1px solid var(--border);
-            animation: fadeIn 0.8s ease-out;
+            background: var(--bg-card); backdrop-filter: blur(20px); padding: 40px; border-radius: 28px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); width: 100%; max-width: 450px; border: 1px solid var(--border);
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        h1 { font-size: 26px; font-weight: 800; margin-bottom: 5px; text-align: center; }
-        #counter { font-size: 12px; text-align: center; color: var(--accent); margin-bottom: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; text-align: center; }
+        #counter { font-size: 11px; text-align: center; color: var(--accent); margin-bottom: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
         
-        input[type="text"] { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 12px; background: rgba(0,0,0,0.02); color: var(--text-main); box-sizing: border-box; outline: none; }
+        input[type="text"] { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 14px; background: rgba(0,0,0,0.03); color: var(--text-main); box-sizing: border-box; outline: none; font-size: 14px; }
         
-        .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 20px; margin: 10px 0; border-radius: 16px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 18px; margin: 12px 0; border-radius: 16px; cursor: pointer; text-align: center; transition: 0.3s; font-size: 14px; font-weight: 500; }
         .upload-wrapper:hover { border-color: var(--accent); background: rgba(79, 70, 229, 0.05); }
         
-        button { cursor: pointer; border: none; padding: 12px; border-radius: 12px; font-weight: 600; margin: 5px 0; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
+        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
         .main { background: var(--accent); color: white; width: 100%; font-size: 15px; }
         .secondary { background: var(--border); color: var(--text-main); width: 100%; }
 
         #progress-container { width: 100%; background: var(--border); border-radius: 10px; display: none; height: 6px; margin: 15px 0; overflow: hidden; }
         #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.4s; }
-        .msg { padding: 12px; border-radius: 12px; margin-top: 15px; display: none; font-size: 13px; font-weight: 500; }
+        
+        .msg { padding: 12px; border-radius: 14px; margin-top: 15px; display: none; font-size: 13px; font-weight: 500; }
         .msg-error { background: #fee2e2; color: #b91c1c; }
         .msg-success { background: #dcfce7; color: #15803d; }
+
+        .timeline { list-style: none; padding: 0; margin-top: 15px; }
+        .timeline li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; align-items: center; }
+        .timeline li::before { content: "•"; color: var(--accent); margin-right: 10px; font-weight: bold; }
+
+        footer { margin-top: 30px; font-size: 11px; color: var(--text-main); opacity: 0.6; text-align: center; }
     </style>
 </head>
 <body>
@@ -44,7 +48,7 @@
     <div class="card">
         <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
             <button onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar</button>
-            <button onclick="alert('Instruções: Faça upload de dois arquivos .xlsx. O sistema comparará com base na coluna informada.')">ℹ️ Ajuda</button>
+            <button onclick="alert('Instruções: Faça upload de dois arquivos .xlsx. O limite é 10MB.')">ℹ️ Ajuda</button>
         </div>
         
         <h1>📊 Comparador 📊</h1>
@@ -60,8 +64,13 @@
         <button class="secondary" onclick="limpar()">Limpar Tudo</button>
 
         <div id="msgBox" class="msg"></div>
-        <div id="historico" style="margin-top: 25px; font-size: 14px;"><strong>Histórico recente:</strong><ul id="lista-historico" style="padding-left: 20px;"></ul></div>
+        <div id="historico" style="margin-top: 25px;">
+            <strong style="font-size: 13px;">Timeline de Auditorias:</strong>
+            <ul class="timeline" id="lista-historico"></ul>
+        </div>
     </div>
+
+    <footer>Comparador Profissional v2.0 | Suporte: 7gaalves7@email.com</footer>
 
     <script>
         window.onload = () => { carregarHistorico(); atualizarContador(); };
@@ -86,7 +95,7 @@
             const col = document.getElementById("colunas").value;
 
             if (!f1 || !f2) return mostrarMsg("Selecione os dois arquivos!");
-            if (!col) return mostrarMsg("Informe a coluna de comparação!");
+            if (!col) return mostrarMsg("Informe a coluna de referência!");
 
             const bar = document.getElementById("progress-bar");
             document.getElementById("progress-container").style.display = "block";
@@ -98,7 +107,7 @@
                 formData.append("colunas", col);
 
                 const res = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
-                if (!res.ok) throw new Error("Erro de processamento no servidor.");
+                if (!res.ok) throw new Error("Erro no servidor.");
 
                 bar.style.width = "100%";
                 const blob = await res.blob();
@@ -106,7 +115,7 @@
                 const a = document.createElement("a"); a.href = url; a.download = "Auditoria_Final.xlsx"; a.click();
                 
                 mostrarMsg("Concluído com sucesso!", false);
-                salvarHistorico(f1.name + " vs " + f2.name);
+                salvarHistorico(f1.name + " & " + f2.name);
             } catch (e) { mostrarMsg(e.message); } 
             finally { setTimeout(() => document.getElementById("progress-container").style.display = "none", 1000); }
         }
