@@ -2,92 +2,141 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Comparador Profissional v3.0</title>
-    <!-- Incluindo a biblioteca SheetJS para ler o Excel no navegador -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador Profissional v2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #4f46e5; --bg-body: #f3f4f6; --bg-card: rgba(255, 255, 255, 0.8); --text-main: #111827; }
-        body.dark-mode { --bg-body: #030712; --bg-card: rgba(17, 24, 39, 0.8); --text-main: #f9fafb; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; align-items: center; padding: 40px 20px; transition: 0.3s; }
-        .card { background: var(--bg-card); backdrop-filter: blur(20px); padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
-        select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); background: rgba(0,0,0,0.03); outline: none; }
-        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; width: 100%; background: var(--accent); color: white; }
-        .theme-picker { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; }
+        :root { --bg-body: #f3f4f6; --bg-card: rgba(255, 255, 255, 0.8); --text-main: #111827; --accent: #4f46e5; --border: rgba(0,0,0,0.1); }
+        body.dark-mode { --bg-body: #030712; --bg-card: rgba(17, 24, 39, 0.8); --text-main: #f9fafb; --border: rgba(255,255,255,0.1); }
+        
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.5s; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 100vh; margin: 0; }
+        
+        .card { 
+            background: var(--bg-card); backdrop-filter: blur(20px); padding: 40px; border-radius: 28px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); width: 100%; max-width: 450px; border: 1px solid var(--border);
+        }
+        
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; text-align: center; }
+        #counter { font-size: 11px; text-align: center; color: var(--accent); margin-bottom: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+        
+        input[type="text"] { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 14px; background: rgba(0,0,0,0.03); color: var(--text-main); box-sizing: border-box; outline: none; font-size: 14px; }
+        
+        .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 18px; margin: 12px 0; border-radius: 16px; cursor: pointer; text-align: center; transition: 0.3s; font-size: 14px; font-weight: 500; }
+        .upload-wrapper:hover { border-color: var(--accent); background: rgba(79, 70, 229, 0.05); }
+        
+        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
+        .main { background: var(--accent); color: white; width: 100%; font-size: 15px; }
+        .secondary { background: var(--border); color: var(--text-main); width: 100%; }
+
+        #progress-container { width: 100%; background: var(--border); border-radius: 10px; display: none; height: 6px; margin: 15px 0; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.4s; }
+        
+        .msg { padding: 12px; border-radius: 14px; margin-top: 15px; display: none; font-size: 13px; font-weight: 500; }
+        .msg-error { background: #fee2e2; color: #b91c1c; }
+        .msg-success { background: #dcfce7; color: #15803d; }
+
+        .timeline { list-style: none; padding: 0; margin-top: 15px; }
+        .timeline li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; align-items: center; }
+        .timeline li::before { content: "•"; color: var(--accent); margin-right: 10px; font-weight: bold; }
+
+        footer { margin-top: 30px; font-size: 11px; color: var(--text-main); opacity: 0.6; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <button onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar</button>
+            <button onclick="alert('Instruções: Faça upload de dois arquivos .xlsx. O limite é 10MB.')">ℹ️ Ajuda</button>
+        </div>
+        
         <h1>📊 Comparador 📊</h1>
+        <div id="counter">Auditorias realizadas: 0</div>
         
-        <!-- Menu Suspenso de Colunas -->
-        <label>Selecione a coluna de referência:</label>
-        <select id="colunas-select">
-            <option value="">Carregue os arquivos primeiro...</option>
-        </select>
+        <input type="text" id="colunas" placeholder="Coluna de referência (ex: ID)">
 
-        <label class="upload-wrapper" for="file1"><input type="file" id="file1" onchange="lerCabecalhos()">Arquivo A</label>
-        <label class="upload-wrapper" for="file2"><input type="file" id="file2" onchange="lerCabecalhos()">Arquivo B</label>
+        <label class="upload-wrapper" for="file1"><span id="label1">📁 Arquivo A</span><input type="file" id="file1" style="display:none;" onchange="updateUI(this, 'label1')"></label>
+        <label class="upload-wrapper" for="file2"><span id="label2">📁 Arquivo B</span><input type="file" id="file2" style="display:none;" onchange="updateUI(this, 'label2')"></label>
         
-        <button onclick="processar()">Processar Auditoria</button>
-        <div id="msgBox"></div>
+        <button class="main" onclick="processar()">Processar Auditoria</button>
+        <div id="progress-container"><div id="progress-bar"></div></div>
+        <button class="secondary" onclick="limpar()">Limpar Tudo</button>
 
-        <div class="theme-picker">
-            Cor do Tema: <input type="color" id="colorPicker" onchange="mudarCor(this.value)">
+        <div id="msgBox" class="msg"></div>
+        <div id="historico" style="margin-top: 25px;">
+            <strong style="font-size: 13px;">Timeline de Auditorias:</strong>
+            <ul class="timeline" id="lista-historico"></ul>
         </div>
     </div>
 
-    <script>
-        // Lógica para ler colunas do Excel sem enviar ao servidor
-        async function lerCabecalhos() {
-            const file = document.getElementById('file1').files[0];
-            if (!file) return;
+    <footer>Comparador Profissional v2.0 | Suporte: 7gaalves7@email.com</footer>
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const range = XLSX.utils.decode_range(sheet['!ref']);
-                
-                const select = document.getElementById('colunas-select');
-                select.innerHTML = ''; // Limpa o menu
-                
-                for(let C = range.s.c; C <= range.e.c; ++C) {
-                    const address = XLSX.utils.encode_col(C) + "1";
-                    const header = sheet[address].v;
-                    const option = document.createElement("option");
-                    option.value = header;
-                    option.text = header;
-                    select.add(option);
-                }
-            };
-            reader.readAsArrayBuffer(file);
+    <script>
+        window.onload = () => { carregarHistorico(); atualizarContador(); };
+
+        function mostrarMsg(texto, isError = true) {
+            const m = document.getElementById("msgBox");
+            m.className = "msg " + (isError ? "msg-error" : "msg-success");
+            m.innerText = texto; m.style.display = "block";
         }
 
-        // Lógica de mudar cor do tema
-        function mudarCor(cor) {
-            document.documentElement.style.setProperty('--accent', cor);
+        function updateUI(input, labelId) {
+            const f = input.files[0];
+            if (!f.name.endsWith('.xlsx')) return mostrarMsg("Erro: Use apenas .xlsx!");
+            if (f.size > 10 * 1024 * 1024) return mostrarMsg("Erro: Arquivo > 10MB!");
+            document.getElementById(labelId).innerText = "✅ " + f.name;
+            document.getElementById("msgBox").style.display = "none";
         }
 
         async function processar() {
             const f1 = document.getElementById("file1").files[0];
             const f2 = document.getElementById("file2").files[0];
-            const col = document.getElementById("colunas-select").value;
+            const col = document.getElementById("colunas").value;
 
-            if (!f1 || !f2 || !col) return alert("Selecione arquivos e a coluna!");
+            if (!f1 || !f2) return mostrarMsg("Selecione os dois arquivos!");
+            if (!col) return mostrarMsg("Informe a coluna de referência!");
 
-            const formData = new FormData();
-            formData.append("arquivo1", f1);
-            formData.append("arquivo2", f2);
-            formData.append("colunas", col);
+            const bar = document.getElementById("progress-bar");
+            document.getElementById("progress-container").style.display = "block";
+            bar.style.width = "40%";
 
-            const res = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a"); a.href = url; a.download = "Resultado.xlsx"; a.click();
-            alert("Sucesso!");
+            try {
+                const formData = new FormData();
+                formData.append("arquivo1", f1); formData.append("arquivo2", f2);
+                formData.append("colunas", col);
+
+                const res = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
+                if (!res.ok) throw new Error("Erro no servidor.");
+
+                bar.style.width = "100%";
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a"); a.href = url; a.download = "Auditoria_Final.xlsx"; a.click();
+                
+                mostrarMsg("Concluído com sucesso!", false);
+                salvarHistorico(f1.name + " & " + f2.name);
+            } catch (e) { mostrarMsg(e.message); } 
+            finally { setTimeout(() => document.getElementById("progress-container").style.display = "none", 1000); }
+        }
+
+        function limpar() { window.location.reload(); }
+
+        function salvarHistorico(nome) {
+            let hist = JSON.parse(localStorage.getItem('auditorias') || "[]");
+            hist.unshift(nome);
+            localStorage.setItem('auditorias', JSON.stringify(hist));
+            localStorage.setItem('totalAuditorias', parseInt(localStorage.getItem('totalAuditorias') || 0) + 1);
+            carregarHistorico(); atualizarContador();
+        }
+
+        function atualizarContador() {
+            document.getElementById("counter").innerText = "Auditorias realizadas: " + (localStorage.getItem('totalAuditorias') || 0);
+        }
+
+        function carregarHistorico() {
+            const hist = JSON.parse(localStorage.getItem('auditorias') || "[]").slice(0, 3);
+            document.getElementById("lista-historico").innerHTML = hist.map(item => `<li>${item}</li>`).join('');
         }
     </script>
 </body>
