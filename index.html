@@ -2,70 +2,92 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Comparador Profissional</title>
+    <title>Comparador Profissional v3.0</title>
+    <!-- Incluindo a biblioteca SheetJS para ler o Excel no navegador -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Variáveis Globais */
-        :root { 
-            --accent: #881337; /* Vinho padrão */
-            --bg-body: #f3f4f6; 
-            --bg-card: #ffffff; 
-            --text-main: #111827; 
-        }
-        body.dark-mode { 
-            --bg-body: #030712; 
-            --bg-card: #111827; 
-            --text-main: #f9fafb; 
-        }
-
-        /* Aplicação das variáveis nos elementos */
-        body { font-family: sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.3s; display: flex; flex-direction: column; align-items: center; padding: 40px; }
-        .card { background: var(--bg-card); padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        
-        /* Botões usando a variável --accent */
-        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; width: 100%; transition: 0.3s; background: var(--accent); color: white; }
-        .secondary { background: #4b5563; }
-        
-        select, .upload-wrapper { width: 100%; padding: 14px; margin: 10px 0; border-radius: 14px; border: 2px solid var(--accent); background: transparent; color: var(--text-main); box-sizing: border-box; }
-        
-        h1 { text-align: center; color: var(--accent); }
+        :root { --accent: #4f46e5; --bg-body: #f3f4f6; --bg-card: rgba(255, 255, 255, 0.8); --text-main: #111827; }
+        body.dark-mode { --bg-body: #030712; --bg-card: rgba(17, 24, 39, 0.8); --text-main: #f9fafb; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; align-items: center; padding: 40px 20px; transition: 0.3s; }
+        .card { background: var(--bg-card); backdrop-filter: blur(20px); padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
+        select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); background: rgba(0,0,0,0.03); outline: none; }
+        button { cursor: pointer; border: none; padding: 13px; border-radius: 14px; font-weight: 600; margin: 5px 0; width: 100%; background: var(--accent); color: white; }
+        .theme-picker { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar Modo</button>
-        </div>
+        <h1>📊 Comparador 📊</h1>
         
-        <h1>📊 Comparador</h1>
-        
-        <select id="colunas-select"><option>Carregue arquivo...</option></select>
-        <label class="upload-wrapper" for="file1"><input type="file" id="file1" onchange="lerCabecalhos(this)" style="display:none">📁 Arquivo A</label>
+        <!-- Menu Suspenso de Colunas -->
+        <label>Selecione a coluna de referência:</label>
+        <select id="colunas-select">
+            <option value="">Carregue os arquivos primeiro...</option>
+        </select>
+
+        <label class="upload-wrapper" for="file1"><input type="file" id="file1" onchange="lerCabecalhos()">Arquivo A</label>
+        <label class="upload-wrapper" for="file2"><input type="file" id="file2" onchange="lerCabecalhos()">Arquivo B</label>
         
         <button onclick="processar()">Processar Auditoria</button>
-        
-        <div style="margin-top:20px; text-align:center;">
-            Selecione a cor do tema: <input type="color" value="#881337" onchange="document.documentElement.style.setProperty('--accent', this.value)">
+        <div id="msgBox"></div>
+
+        <div class="theme-picker">
+            Cor do Tema: <input type="color" id="colorPicker" onchange="mudarCor(this.value)">
         </div>
     </div>
 
     <script>
-        function lerCabecalhos(input) {
+        // Lógica para ler colunas do Excel sem enviar ao servidor
+        async function lerCabecalhos() {
+            const file = document.getElementById('file1').files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const range = XLSX.utils.decode_range(sheet['!ref']);
+                
                 const select = document.getElementById('colunas-select');
-                select.innerHTML = ''; 
+                select.innerHTML = ''; // Limpa o menu
+                
                 for(let C = range.s.c; C <= range.e.c; ++C) {
-                    const header = sheet[XLSX.utils.encode_col(C) + "1"]?.v || "Coluna " + (C+1);
-                    select.add(new Option(header, header));
+                    const address = XLSX.utils.encode_col(C) + "1";
+                    const header = sheet[address].v;
+                    const option = document.createElement("option");
+                    option.value = header;
+                    option.text = header;
+                    select.add(option);
                 }
             };
-            reader.readAsArrayBuffer(input.files[0]);
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Lógica de mudar cor do tema
+        function mudarCor(cor) {
+            document.documentElement.style.setProperty('--accent', cor);
+        }
+
+        async function processar() {
+            const f1 = document.getElementById("file1").files[0];
+            const f2 = document.getElementById("file2").files[0];
+            const col = document.getElementById("colunas-select").value;
+
+            if (!f1 || !f2 || !col) return alert("Selecione arquivos e a coluna!");
+
+            const formData = new FormData();
+            formData.append("arquivo1", f1);
+            formData.append("arquivo2", f2);
+            formData.append("colunas", col);
+
+            const res = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = "Resultado.xlsx"; a.click();
+            alert("Sucesso!");
         }
     </script>
 </body>
