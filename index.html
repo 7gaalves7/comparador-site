@@ -22,60 +22,49 @@
             background-color: var(--bg-body); 
             color: var(--text-main); 
             margin: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
-            transition: 0.4s;
-        }
-
-        #theme-toggle { 
-            margin-bottom: 20px; cursor: pointer; padding: 10px 20px; 
-            border-radius: 30px; border: none; background: var(--border); 
-            color: var(--text-main); font-weight: 600; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+            transition: background 0.3s;
         }
 
         .card { 
-            background: var(--bg-card); padding: 60px; border-radius: 24px; 
+            background: var(--bg-card); padding: 40px; border-radius: 24px; 
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
-            width: 450px; text-align: center; border: 1px solid var(--border);
-            animation: fadeIn 0.8s ease-out;
+            width: 400px; text-align: center; border: 1px solid var(--border);
+            animation: fadeIn 0.6s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; }
 
-        h1 { 
-            font-size: 36px; font-weight: 900; margin-bottom: 8px;
-            /* Removemos o clip de gradiente aqui para os emojis aparecerem com cores originais */
+        .subtitle { color: var(--text-muted); margin-bottom: 25px; font-size: 14px; }
+
+        .btn-theme { 
+            background: var(--border); border: none; padding: 6px 12px; 
+            border-radius: 20px; cursor: pointer; font-size: 12px; margin-bottom: 20px;
             color: var(--text-main);
         }
 
-        .subtitle { color: var(--text-muted); margin-bottom: 40px; font-size: 16px; }
-
         .upload-wrapper { 
             display: block; border: 2px dashed var(--border); 
-            padding: 30px; margin: 24px 0; border-radius: 16px; 
-            cursor: pointer; transition: 0.3s;
+            padding: 20px; margin: 15px 0; border-radius: 12px; 
+            cursor: pointer; transition: 0.2s; font-size: 14px;
         }
 
-        .upload-wrapper:hover { border-color: var(--accent); background: #f5f3ff; }
+        .upload-wrapper:hover { border-color: var(--accent); }
 
-        button { 
+        button.processar { 
             background: var(--accent); color: white; border: none; 
-            padding: 18px; border-radius: 12px; width: 100%; 
-            cursor: pointer; font-weight: 700; font-size: 16px; margin-top: 20px;
-            transition: transform 0.2s, background 0.3s;
+            padding: 15px; border-radius: 12px; width: 100%; 
+            cursor: pointer; font-weight: 700; margin-top: 10px;
         }
 
-        button:hover { transform: scale(1.02); filter: brightness(1.1); }
-        button:active { transform: scale(0.98); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <button id="theme-toggle" onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar Modo</button>
-
     <div class="card">
+        <button class="btn-theme" onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar Modo</button>
+        
         <h1>📊 Comparador 📊</h1>
         <p class="subtitle">Selecione suas planilhas para iniciar a auditoria.</p>
         
@@ -89,25 +78,24 @@
             <input type="file" id="file2" style="display:none;" onchange="updateUI(this, 'label2')">
         </label>
         
-        <button onclick="processar()">Processar Dados</button>
+        <button class="processar" onclick="processar()">Processar Dados</button>
     </div>
 
     <script>
         function updateUI(input, labelId) {
             if (input.files.length > 0) {
-                const label = document.getElementById(labelId);
-                label.innerText = "✅ " + input.files[0].name;
+                document.getElementById(labelId).innerText = "✅ " + input.files[0].name;
             }
         }
 
         async function processar() {
             const file1 = document.getElementById("file1").files[0];
             const file2 = document.getElementById("file2").files[0];
-            if (!file1 || !file2) { alert("Selecione as duas planilhas."); return; }
+            if (!file1 || !file2) { alert("Selecione os dois arquivos."); return; }
             
-            const botao = document.querySelector("button");
-            botao.innerText = "Processando...";
-            botao.disabled = true;
+            const btn = document.querySelector(".processar");
+            btn.innerText = "Processando...";
+            btn.disabled = true;
 
             try {
                 const formData = new FormData();
@@ -119,23 +107,19 @@
                     body: formData
                 });
 
-                if (!response.ok) throw new Error("Erro ao processar.");
+                if (!response.ok) throw new Error();
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = "Auditoria_Completa.xlsx";
-                document.body.appendChild(a);
                 a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
                 alert("Auditoria concluída!");
-            } catch (erro) {
-                console.error(erro);
-                alert("Erro ao processar os arquivos.");
+            } catch {
+                alert("Erro ao processar.");
             } finally {
-                botao.innerText = "Processar Dados";
-                botao.disabled = false;
+                btn.innerText = "Processar Dados";
+                btn.disabled = false;
             }
         }
     </script>
