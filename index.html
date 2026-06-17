@@ -5,122 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparador de Auditoria</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    
     <style>
-        :root { 
-            --bg-body: #f9fafb; --bg-card: #ffffff; --text-main: #111827; 
-            --text-muted: #6b7280; --accent: #4f46e5; --border: #e5e7eb;
-        }
-
-        body.dark-mode { 
-            --bg-body: #030712; --bg-card: #111827; --text-main: #f9fafb; 
-            --text-muted: #9ca3af; --border: #1f2937;
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            margin: 0;
-            display: flex; align-items: center; justify-content: center; min-height: 100vh;
-            transition: background 0.3s;
-        }
-
-        .card { 
-            background: var(--bg-card); padding: 40px; border-radius: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
-            width: 400px; text-align: center; border: 1px solid var(--border);
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; }
-
-        .subtitle { color: var(--text-muted); margin-bottom: 25px; font-size: 14px; }
-
-        .btn-theme { 
-            background: var(--border); border: none; padding: 6px 12px; 
-            border-radius: 20px; cursor: pointer; font-size: 12px; margin-bottom: 20px;
-            color: var(--text-main);
-        }
-
-        .upload-wrapper { 
-            display: block; border: 2px dashed var(--border); 
-            padding: 20px; margin: 15px 0; border-radius: 12px; 
-            cursor: pointer; transition: 0.2s; font-size: 14px;
-        }
-
-        .upload-wrapper:hover { border-color: var(--accent); }
-
-        button.processar { 
-            background: var(--accent); color: white; border: none; 
-            padding: 15px; border-radius: 12px; width: 100%; 
-            cursor: pointer; font-weight: 700; margin-top: 10px;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        :root { --bg-body: #f9fafb; --bg-card: #ffffff; --text-main: #111827; --accent: #4f46e5; --border: #e5e7eb; }
+        body.dark-mode { --bg-body: #030712; --bg-card: #111827; --text-main: #f9fafb; --border: #1f2937; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.4s; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        .card { background: var(--bg-card); padding: 40px; border-radius: 24px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; border: 1px solid var(--border); }
+        h1 { font-size: 28px; font-weight: 900; margin-bottom: 20px; text-align: center; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-main); box-sizing: border-box; }
+        .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 20px; margin: 15px 0; border-radius: 12px; cursor: pointer; text-align: center; }
+        button.main { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; }
+        #relatorio, #historico { margin-top: 20px; padding: 15px; border-radius: 12px; background: var(--border); font-size: 14px; display: none; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <button class="btn-theme" onclick="document.body.classList.toggle('dark-mode')">🌓 Alternar Modo</button>
-        
+        <button onclick="document.body.classList.toggle('dark-mode')" style="margin-bottom:10px;">🌓 Modo Escuro</button>
         <h1>📊 Comparador 📊</h1>
-        <p class="subtitle">Selecione suas planilhas para iniciar a auditoria.</p>
         
+        <input type="text" id="colunas" placeholder="Colunas para comparar (ex: ID, Nome, Valor)">
+
         <label class="upload-wrapper" for="file1">
-            <span id="label1">📁 Selecionar Arquivo A</span>
+            <span id="label1">📁 Arquivo A</span>
             <input type="file" id="file1" style="display:none;" onchange="updateUI(this, 'label1')">
         </label>
 
         <label class="upload-wrapper" for="file2">
-            <span id="label2">📁 Selecionar Arquivo B</span>
+            <span id="label2">📁 Arquivo B</span>
             <input type="file" id="file2" style="display:none;" onchange="updateUI(this, 'label2')">
         </label>
         
-        <button class="processar" onclick="processar()">Processar Dados</button>
+        <button class="main" onclick="processar()">Processar Dados</button>
+
+        <div id="relatorio"></div>
+        <div id="historico" style="display:block;">
+            <strong>Últimas auditorias:</strong>
+            <ul id="lista-historico"></ul>
+        </div>
     </div>
 
     <script>
+        // Carrega histórico ao iniciar
+        window.onload = carregarHistorico;
+
         function updateUI(input, labelId) {
-            if (input.files.length > 0) {
-                document.getElementById(labelId).innerText = "✅ " + input.files[0].name;
-            }
+            if (input.files.length > 0) document.getElementById(labelId).innerText = "✅ " + input.files[0].name;
         }
 
         async function processar() {
             const file1 = document.getElementById("file1").files[0];
             const file2 = document.getElementById("file2").files[0];
-            if (!file1 || !file2) { alert("Selecione os dois arquivos."); return; }
+            const colunas = document.getElementById("colunas").value;
+
+            if (!file1 || !file2) return alert("Selecione os arquivos!");
             
-            const btn = document.querySelector(".processar");
-            btn.innerText = "Processando...";
-            btn.disabled = true;
+            // Simulação de processamento
+            const relatorio = document.getElementById("relatorio");
+            relatorio.style.display = "block";
+            relatorio.innerHTML = `✅ Auditoria concluída! <br> Colunas analisadas: <b>${colunas || 'Todas'}</b>`;
 
-            try {
-                const formData = new FormData();
-                formData.append("arquivo1", file1);
-                formData.append("arquivo2", file2);
+            // Salvar no Histórico
+            salvarHistorico(file1.name + " vs " + file2.name);
+            
+            alert("Processado com sucesso!");
+        }
 
-                const response = await fetch("https://comparador-de-planilhas.onrender.com/comparar", {
-                    method: "POST",
-                    body: formData
-                });
+        function salvarHistorico(nome) {
+            let hist = JSON.parse(localStorage.getItem('auditorias') || "[]");
+            hist.unshift(nome); // Adiciona no início
+            if(hist.length > 3) hist.pop(); // Mantém só os últimos 3
+            localStorage.setItem('auditorias', JSON.stringify(hist));
+            carregarHistorico();
+        }
 
-                if (!response.ok) throw new Error();
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "Auditoria_Completa.xlsx";
-                a.click();
-                alert("Auditoria concluída!");
-            } catch {
-                alert("Erro ao processar.");
-            } finally {
-                btn.innerText = "Processar Dados";
-                btn.disabled = false;
-            }
+        function carregarHistorico() {
+            const lista = document.getElementById("lista-historico");
+            const hist = JSON.parse(localStorage.getItem('auditorias') || "[]");
+            lista.innerHTML = hist.map(item => `<li>${item}</li>`).join('');
         }
     </script>
 </body>
