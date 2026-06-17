@@ -9,18 +9,16 @@
         :root { --bg-body: #f9fafb; --bg-card: #ffffff; --text-main: #111827; --accent: #4f46e5; --border: #e5e7eb; }
         body.dark-mode { --bg-body: #030712; --bg-card: #111827; --text-main: #f9fafb; --border: #1f2937; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: 0.4s; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 100vh; }
-        .card { background: var(--bg-card); padding: 40px; border-radius: 24px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; border: 1px solid var(--border); transition: 0.4s; }
+        .card { background: var(--bg-card); padding: 40px; border-radius: 24px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; border: 1px solid var(--border); }
         h1 { font-size: 28px; font-weight: 900; margin-bottom: 20px; text-align: center; }
         input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-main); box-sizing: border-box; }
         .upload-wrapper { display: block; border: 2px dashed var(--border); padding: 20px; margin: 15px 0; border-radius: 12px; cursor: pointer; text-align: center; }
-        .upload-wrapper:hover { border-color: var(--accent); }
         button { cursor: pointer; border: none; padding: 12px; border-radius: 10px; font-weight: 600; margin: 5px 0; }
         .main { background: var(--accent); color: white; width: 100%; font-size: 16px; }
         .secondary { background: var(--border); color: var(--text-main); width: 100%; }
-        /* Spinner */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Modal */
+        /* Barra de Progresso */
+        #progress-container { width: 100%; background: var(--border); border-radius: 10px; display: none; height: 10px; margin: 10px 0; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal-content { background: var(--bg-card); padding: 30px; border-radius: 20px; max-width: 300px; text-align: center; }
     </style>
@@ -34,58 +32,67 @@
         </div>
         
         <h1>📊 Comparador 📊</h1>
-        
         <input type="text" id="colunas" placeholder="Colunas p/ comparar (ex: ID, Nome)">
 
         <label class="upload-wrapper" for="file1"><span id="label1">📁 Arquivo A</span><input type="file" id="file1" style="display:none;" onchange="updateUI(this, 'label1')"></label>
         <label class="upload-wrapper" for="file2"><span id="label2">📁 Arquivo B</span><input type="file" id="file2" style="display:none;" onchange="updateUI(this, 'label2')"></label>
         
         <button class="main" onclick="processar()">Processar Dados</button>
-        <div class="loader" id="loader"></div>
+        <div id="progress-container"><div id="progress-bar"></div></div>
         <button class="secondary" onclick="limpar()">Limpar Tudo</button>
 
-        <div id="relatorio" style="display:none; margin-top:15px; padding:10px; background:var(--border); border-radius:8px; font-size:13px;"></div>
+        <div id="relatorio" style="display:none; margin-top:15px; padding:15px; background:var(--border); border-radius:8px; font-size:13px;"></div>
         <div id="historico" style="margin-top: 20px;"><strong>Últimas auditorias:</strong><ul id="lista-historico"></ul></div>
     </div>
 
-    <div id="helpModal" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content"><h3>Como usar:</h3><p>Selecione dois arquivos .xlsx. Digite o nome das colunas separadas por vírgula para comparar. O sistema gera uma planilha com as divergências.</p></div>
-    </div>
+    <div id="helpModal" class="modal" onclick="this.style.display='none'"><div class="modal-content"><h3>Como usar:</h3><p>Selecione dois arquivos .xlsx. Digite as colunas para comparar. O sistema indicará o processamento na barra de progresso.</p></div></div>
 
     <script>
         window.onload = carregarHistorico;
 
         function updateUI(input, labelId) {
-            if (!input.files[0].name.endsWith('.xlsx')) return alert("Selecione apenas arquivos .xlsx!");
+            if (!input.files[0].name.endsWith('.xlsx')) return alert("Erro: Apenas arquivos .xlsx!");
             document.getElementById(labelId).innerText = "✅ " + input.files[0].name;
         }
 
         async function processar() {
             const file1 = document.getElementById("file1").files[0];
             const file2 = document.getElementById("file2").files[0];
-            if (!file1 || !file2) return alert("Selecione os dois arquivos!");
-            
-            const btn = document.querySelector(".main");
-            const loader = document.getElementById("loader");
-            btn.disabled = true; loader.style.display = "block";
+            const colunas = document.getElementById("colunas").value;
 
+            if (!file1 || !file2) return alert("Selecione os dois arquivos!");
+            if (!colunas) return alert("Informe ao menos uma coluna para comparar!");
+
+            const btn = document.querySelector(".main");
+            const bar = document.getElementById("progress-bar");
+            document.getElementById("progress-container").style.display = "block";
+            btn.disabled = true;
+
+            // Simulação de progresso
+            bar.style.width = "30%";
+            
             try {
                 const formData = new FormData();
                 formData.append("arquivo1", file1); formData.append("arquivo2", file2);
-                formData.append("colunas", document.getElementById("colunas").value);
+                formData.append("colunas", colunas);
 
                 const response = await fetch("https://comparador-de-planilhas.onrender.com/comparar", { method: "POST", body: formData });
+                bar.style.width = "70%";
                 if (!response.ok) throw new Error();
 
                 const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a"); a.href = url; a.download = "Auditoria_Completa.xlsx"; a.click();
+                bar.style.width = "100%";
                 
-                document.getElementById("relatorio").style.display = "block";
-                document.getElementById("relatorio").innerHTML = `✅ Auditoria concluída!`;
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a"); a.href = url; a.download = "Auditoria_Resultado.xlsx"; a.click();
+                
+                const relatorio = document.getElementById("relatorio");
+                relatorio.style.display = "block";
+                relatorio.innerHTML = `✅ <b>Sucesso!</b><br>Colunas auditadas: ${colunas}<br>Data: ${new Date().toLocaleDateString()}`;
+                
                 salvarHistorico(file1.name + " vs " + file2.name);
             } catch { alert("Erro no servidor!"); } 
-            finally { btn.disabled = false; loader.style.display = "none"; }
+            finally { btn.disabled = false; setTimeout(() => document.getElementById("progress-container").style.display = "none", 1000); }
         }
 
         function limpar() {
