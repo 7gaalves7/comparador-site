@@ -46,6 +46,11 @@
         <label class="upload-wrapper" for="file1"><span id="label1">📁 Arquivo A</span><input type="file" id="file1" style="display:none;" onchange="updateUI(this, 'label1')"></label>
         <label class="upload-wrapper" for="file2"><span id="label2">📁 Arquivo B</span><input type="file" id="file2" style="display:none;" onchange="updateUI(this, 'label2')"></label>
 
+        <div id="progress-container" style="display: none; width: 100%; background-color: #f3f3f3; border-radius: 5px; margin-top: 10px;">
+        <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4caf50; border-radius: 5px; transition: width 0.3s;"></div>
+</div>
+        <p id="status-text"></p>
+        
         <div id="colunas-container">
             <p><strong>Selecione as colunas:</strong></p>
             <div id="lista-colunas"></div>
